@@ -1,0 +1,36 @@
+<launch>
+
+ <node pkg="homography_geometric_control" name="homo_geo" type="homo_geo" output="screen">
+   <!-- MavrosInteraction parameters -->
+    <param name="Control_rate" value="200.0"/>
+    <param name="ControlGain/KRx" value="0.42"/>
+    <param name="ControlGain/KRy" value="0.42"/>
+    <param name="ControlGain/KRz" value="0.18"/>
+    <param name="ControlGain/KOmegax" value="0.152"/>
+    <param name="ControlGain/KOmegay" value="0.152"/>
+    <param name="ControlGain/KOmegaz" value="0.082"/>    
+   <!-- MavrosInteraction parameters -->
+    <param name="Mass" value="1.5"/>
+    <param name="Gravity" value="9.80665"/>
+    <param name="MinTorque" value="-0.5"/>
+    <param name="MaxTorque" value="0.5"/>
+    <param name="MinThrust" value="0.3"/>
+    <param name="MaxThrust" value="0.8"/>
+    
+    <!-- HomographyGeometric parameters -->
+    <param name="ControlGain/c" value="1.30"/>
+    <param name="YawDesired" value="0.0"/>
+    <param name="ControlGain/Kvx" value="8.25"/>
+    <param name="ControlGain/Kvy" value="8.25"/>
+    <param name="ControlGain/Kvz" value="3.35"/>
+    <param name="ThrustOffest" value="0.71"/> <!-- 归一化推力的偏移量  无人机稳定时的系数 -->
+    <param name="ThrustScale" value="0.025"/><!-- 归一化推力的的缩放因子-->
+    <param name="ControlGain/k1" value="2.26"/>
+    <param name="ControlGain/k2" value="1.0"/>
+    <param name="ControlGain/k3" value="0.0"/>
+    <param name="PitchOffest" value="-0.0"/>
+    <param name="RollOffest" value="-0.0"/>
+    <param name="YawOffest" value="0.0"/>
+ </node>
+
+</launch>

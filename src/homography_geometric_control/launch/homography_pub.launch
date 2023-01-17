@@ -1,0 +1,19 @@
+<launch>
+
+ <node pkg="homography_geometric_control" name="homography_publish" type="homography_publish" output="screen">
+    <param name="pubChoose" type="int" value="4"/> <!-- 发布选择参数 0不发布 1从位置信息求解 2 从图像信息求解 -->
+    <param name="posDesire/x" type="double" value="0.0"/>
+    <param name="posDesire/y" type="double" value="0.0"/>
+    <param name="posDesire/z" type="double" value="1.0"/>
+    <param name="n/x" type="double" value="0.0"/>
+    <param name="n/y" type="double" value="0.0"/>
+    <param name="n/z" type="double" value="1.0"/>
+    <param name="d" type="double" value="1.0"/>
+
+    <param name="witdh" type="int" value="640"/>
+    <param name="hight" type="int" value="480"/>
+    <param name="refImgPath" type="string" value="$(find homography_geometric_control)/ref_img/"/><!--  参考图片路径 -->
+    <param name="refImgName" type="string" value="image_2.png"/><!--  参考图片名称 -->
+    <remap from="/image_raw" to="/iris/usb_cam/image_raw"/> <!-- /galaxy_camera/image_raw -->
+ </node>
+</launch>
