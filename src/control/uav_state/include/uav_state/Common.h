@@ -5,8 +5,9 @@
  * @brief Common library 
  * 
  */
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <Eigen/Eigen>
+#include <cmath>
+
 namespace Common
 {
 
@@ -36,6 +37,36 @@ MatrixHat(const Eigen::Vector3d& val)
     res << 0, -val(2), val(1), 
             val(2), 0, -val(0), 
             -val(1), val(0), 0;
+    return res;
+}
+
+static Eigen::Matrix3d 
+LogMatrix(const Eigen::Matrix3d& val)
+{
+    Eigen::Matrix3d res;
+    double tmp;
+    tmp = acos((val.trace()-1)/2);
+    res = tmp/(2*sin(tmp))*(val-val.transpose());
+    return res;
+}
+
+static Eigen::Vector3d 
+Limit(const Eigen::Vector3d& val)
+{
+    Eigen::Vector3d res;
+    
+    return res;
+}
+
+static Eigen::Vector3d 
+Sign(const Eigen::Vector3d& val)
+{
+    Eigen::Vector3d res;
+    for(int i=0;i<3;i++){
+        if(val(i) > 0) res(i) = 1;
+        else if(val(i) == 0) res(i) = 0;
+        else res(i) = -1;
+    }
     return res;
 }
 

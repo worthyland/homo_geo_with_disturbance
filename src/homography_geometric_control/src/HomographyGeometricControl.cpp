@@ -25,6 +25,8 @@ HomographyGeometric::HomographyGeometric(const ros::NodeHandle& nh,const ros::No
     nhParam_.param("YawOffest",eulerAngleOffest_(2),0.0);
     nhParam_.param("RollOffest",eulerAngleOffest_(1),0.0);
     nhParam_.param("PitchOffest",eulerAngleOffest_(0),0.0);
+    nhParam_.param("VelocityEstimatorEnable",VelocityEstimatorEnable,0);
+    nhParam_.param("ForceDisturbanceEstimatorEnable",ForceDisturbanceEstimatorEnable,0);
     homography_ = Eigen::Matrix3d::Identity();
     homographyVirtual_ = Eigen::Matrix3d::Identity();
     RZ_ = Eigen::Matrix3d::Identity();
@@ -147,9 +149,9 @@ HomographyGeometric::UpdateRotationDesired()
     b1d.normalize();
 
     // Eigen::Vector3d debugVal1,debugVal2,debugVal3;//调试变量  仅调试用
-//     debugVal1 = RZ_*Common::MatrixHat(curUavState_.GetOmega()(2)*axisZ_)*(- FVitual_/curUavState_.GetMass() + curUavState_.GetGravity()*axisZ_ );
-// debugVal2 = RZ_*((controlGain_.Kv/(curUavState_.GetMass()*controlGain_.c) * 
-// ( -Common::MatrixHat(curUavState_.GetOmega()(2)*axisZ_)*e1_ + (  RY_*RX_*curUavState_.GetAcc())/controlGain_.c + controlGain_.c *(e2_-e1_))));
+    //     debugVal1 = RZ_*Common::MatrixHat(curUavState_.GetOmega()(2)*axisZ_)*(- FVitual_/curUavState_.GetMass() + curUavState_.GetGravity()*axisZ_ );
+    // debugVal2 = RZ_*((controlGain_.Kv/(curUavState_.GetMass()*controlGain_.c) * 
+    // ( -Common::MatrixHat(curUavState_.GetOmega()(2)*axisZ_)*e1_ + (  RY_*RX_*curUavState_.GetAcc())/controlGain_.c + controlGain_.c *(e2_-e1_))));
     // dot_tmp = debugVal1 + debugVal2;
                  
     dot_tmp = RZ_*Common::MatrixHat(curUavState_.GetOmega()(2)*axisZ_)*(- FVitual_/curUavState_.GetMass() + curUavState_.GetGravity()*axisZ_ )
@@ -248,14 +250,20 @@ HomographyGeometric::operator() (const Control::Quadrotor& curUavState)
 
     e1_ = UpdateError1();//e1 = (I-Hv)*m
 
-    e2_ = UpdateError2FromTrueVel();//e2 = e1 + Vv/c
-    e2_ = UpdateError2FromEstVel();
+    
+    if(VelocityEstimatorEnable==2){
+        e2_ = UpdateError2FromEstVel();
+    }else {
+        e2_ = UpdateError2FromTrueVel();//e2 = e1 + Vv/c
+    }
     FVitual_ = UpdateFVitual();//Fv = -Kv * e2
 
     thrust_ = UpdateThrust();//T = - [Fv - m*g*ez]' (RY*RX *ez);
     RDesired_ = UpdateRotationDesired();//FVitual_ -> RDesired_
     omegaDesired_ = UpdateOmegaDesired();
-    velVitualEst_ = UpdateVelocityEstimation();//估计虚拟框架当前速度
+    if(VelocityEstimatorEnable!=0){
+        velVitualEst_ = UpdateVelocityEstimation();//估计虚拟框架当前速度
+    }
     // Common::ShowVal("RZ_",RZ_);
     // Common::ShowVal("RY_",RY_);
     // Common::ShowVal("RX_",RX_);

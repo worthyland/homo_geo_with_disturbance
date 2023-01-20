@@ -1,0 +1,8 @@
+prefix=/home/sw/homo_geo_with_disturbance/install
+
+Name: homography_geometric_control
+Description: Description of homography_geometric_control
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: roscpp rospy std_msgs uav_state mavros_interaction so3_control

@@ -18,6 +18,8 @@ struct ControlGain
     /* data */
     Eigen::Matrix3d KR;
     Eigen::Matrix3d KOmega;
+    double c2,c3;
+    double Ks;
 };
 
 private:

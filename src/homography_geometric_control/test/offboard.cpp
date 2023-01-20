@@ -85,8 +85,8 @@ int main(int argc, char **argv)
             }
         }
    
-    mix_pub.publish(mix_u);
-          //local_pos_pub.publish(pose);
+    //mix_pub.publish(mix_u);
+          local_pos_pub.publish(pose);
          ROS_INFO("publish");
   
 

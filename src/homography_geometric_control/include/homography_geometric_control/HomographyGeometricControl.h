@@ -75,6 +75,8 @@ private:
     Eigen::Vector3d  velVitualError_;
     Eigen::Vector3d  velVitualEst_;//估计的虚拟框架速度
     bool homographyCallbackState;
+    int VelocityEstimatorEnable;//速度估计器 0 不使能  1 使能但不使用 2 使能且使用 
+    int ForceDisturbanceEstimatorEnable;//扰动估计器 0 不使能  1 使能但不使用 2 使能且使用
 
     virtual void HomographyCallback(const homo_msgs::HomographyResult::ConstPtr& msg);
 

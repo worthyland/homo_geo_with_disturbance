@@ -33,16 +33,16 @@ int main(int argc, char *argv[]){
 
 
     while(ros::ok()){
-        
-        // uavInfo.ShowUavState(5);//通过mavros读取的
-        outLoop(uavInfo.GetQuadrotor());
-        attitudeControllor(outLoop.GetRDesired(),outLoop.GetOmegaDesired(),outLoop.GetQuadrotor());
-        Eigen::Matrix3d enu_R_ned;
-        enu_R_ned << 1.0, 0.0, 0.0,0.0, -1.0, 0.0, 0.0, 0.0, -1.0;
-        //力矩计算表示在base_link_ned，推力计算为正，不需要转换
-        uavInfo.ActuatorPub(outLoop.GetThrust(), attitudeControllor.GetTorque(),true);
-        // uavInfo.ActuatorPub();
-
+        if(uavInfo.GetCurrentControlState().mode == "OFFBOARD"){
+            // uavInfo.ShowUavState(5);//通过mavros读取的
+            outLoop(uavInfo.GetQuadrotor());
+            attitudeControllor(outLoop.GetRDesired(),outLoop.GetOmegaDesired(),outLoop.GetQuadrotor());
+            Eigen::Matrix3d enu_R_ned;
+            enu_R_ned << 1.0, 0.0, 0.0,0.0, -1.0, 0.0, 0.0, 0.0, -1.0;
+            //力矩计算表示在base_link_ned，推力计算为正，不需要转换
+            uavInfo.ActuatorPub(outLoop.GetThrust(), attitudeControllor.GetTorque(),true);
+            // uavInfo.ActuatorPub();
+        }
         std_msgs::Float32MultiArray outputRecord;
 
         uavInfo.DataSvae(outputRecord,outLoop.GetE1());//0 1 2

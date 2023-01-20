@@ -14,6 +14,9 @@ SO3Control::SO3Control(const ros::NodeHandle& nh,const ros::NodeHandle& nhParam)
     nhParam_.param("ControlGain/KOmegax",controlGain_.KOmega(0,0),0.01);
     nhParam_.param("ControlGain/KOmegay",controlGain_.KOmega(1,1),0.01);
     nhParam_.param("ControlGain/KOmegaz",controlGain_.KOmega(2,2),0.01);
+    nhParam_.param("ControlGain/c2",controlGain_.c2,0.15);
+    nhParam_.param("ControlGain/c3",controlGain_.c3,1.0);
+    nhParam_.param("ControlGain/Ks",controlGain_.Ks,1.0);
     attitudeTrackError_ = 0.0;
 }
 
@@ -85,8 +88,11 @@ const Eigen::Vector3d
 SO3Control::UpdateER()
 {
     Eigen::Vector3d res;
-    res = 0.5*Common::MatrixHatInv(RDesired_.transpose()*curUavState_.GetR() 
-                            - curUavState_.GetR().transpose()*RDesired_);
+    Eigen::Matrix3d RTmp;
+    RTmp = RDesired_.transpose()*curUavState_.GetR();
+    res = Common::MatrixHatInv(Common::LogMatrix(RTmp));
+    // res = 0.5*Common::MatrixHatInv(RDesired_.transpose()*curUavState_.GetR() 
+    //                         - curUavState_.GetR().transpose()*RDesired_);
     return res;
 }
 
@@ -94,20 +100,28 @@ const Eigen::Vector3d
 SO3Control::UpdateEOmega()
 {
     Eigen::Vector3d res;
-    res = curUavState_.GetOmega() - curUavState_.GetR()*RDesired_*omegaDesired_;
+    res = curUavState_.GetOmega() - RDesired_.transpose()*curUavState_.GetR()*omegaDesired_;
     return res;
 }
 
 const Eigen::Vector3d 
 SO3Control::UpdateTorque()
 {
-    Eigen::Vector3d res;
+    Eigen::Vector3d res,s;
     Eigen::Vector3d part1,part2,part3;
+    static double dot_Ks = 0;
+    s = controlGain_.KR * eR_ + eOmega_;
+    Common::ShowVal("dot_Ks",dot_Ks,5);
+    controlGain_.Ks += dot_Ks/controlRate_;
+    controlGain_.Ks = std::max(-0.03,std::min(0.03,controlGain_.Ks));
     part1 = Common::MatrixHat(curUavState_.GetOmega()) * curUavState_.GetInertialMatrix() * curUavState_.GetOmega();
-    part2 = - controlGain_.KR * eR_;
-    part3 = - controlGain_.KOmega * eOmega_;
-    res = part1 + part2 + part3;
-    // res = part2 + part3;
+    part2 = - controlGain_.Ks*Common::Sign(s);
+    part3 = - controlGain_.c2*s;
+    
+    // res = part3 +  part2 + part1 ;
+    res =  part3 + part1 ;
+
+    dot_Ks = - controlGain_.c3* controlGain_.Ks + 0.1*s.transpose()*Common::Sign(s);
     return res;
 }
 const double 
@@ -126,11 +140,12 @@ SO3Control::operator() (const Eigen::Matrix3d& RDesired,const Eigen::Vector3d& o
     
     eR_ = UpdateER();
     eOmega_ = UpdateEOmega();
+
     torque_ = UpdateTorque();
     attitudeTrackError_ = UpdateAttitudeTrackError();
     
     ShowInternal(5);
-    // ShowParamVal(5);
+    ShowParamVal(5);
 }
 
 
@@ -150,5 +165,8 @@ SO3Control::ShowParamVal(int num) const
     Common::ShowVal("controlRate_",controlRate_,num);
     Common::ShowVal("controlGain_.KR",controlGain_.KR,num);
     Common::ShowVal("controlGain_.KOmega",controlGain_.KOmega,num);
+    Common::ShowVal("controlGain_.c2",controlGain_.c2,num);
+    Common::ShowVal("controlGain_.c3",controlGain_.c3,num);
+    Common::ShowVal("controlGain_.Ks",controlGain_.Ks,num);
 }
 } // namespace Control

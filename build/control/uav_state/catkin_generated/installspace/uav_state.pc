@@ -1,0 +1,8 @@
+prefix=/home/sw/homo_geo_with_disturbance/install
+
+Name: uav_state
+Description: Description of uav_state
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib -luav_state
+Requires: 
