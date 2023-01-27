@@ -22,6 +22,10 @@ HomographyGeometric::HomographyGeometric(const ros::NodeHandle& nh,const ros::No
     nhParam_.param("ControlGain/k1",controlGain_.k1,5.0);
     nhParam_.param("ControlGain/k2",controlGain_.k2,1.0);
     nhParam_.param("ControlGain/k3",controlGain_.k3,1.0);
+    controlGain_.Kp1 = Eigen::Matrix3d::Identity();
+    nhParam_.param("ControlGain/Kp1x",controlGain_.Kp1(0,0),1.0);
+    nhParam_.param("ControlGain/Kp1y",controlGain_.Kp1(1,1),1.0);
+    nhParam_.param("ControlGain/Kp1z",controlGain_.Kp1(2,2),1.0);
     nhParam_.param("YawOffest",eulerAngleOffest_(2),0.0);
     nhParam_.param("RollOffest",eulerAngleOffest_(1),0.0);
     nhParam_.param("PitchOffest",eulerAngleOffest_(0),0.0);
@@ -34,15 +38,22 @@ HomographyGeometric::HomographyGeometric(const ros::NodeHandle& nh,const ros::No
     RX_ = Eigen::Matrix3d::Identity();
     e1_ = Eigen::Vector3d::Zero();
     e2_ = Eigen::Vector3d::Zero();
+    e1_last_ = Eigen::Vector3d::Zero();
+    e2_last_ = Eigen::Vector3d::Zero();
     FVitual_ = Eigen::Vector3d::Zero();
     RDesired_ = Eigen::Matrix3d::Identity();
     dot_RDesired_ = Eigen::Matrix3d::Zero();
     omegaDesired_ = Eigen::Vector3d::Zero();
+    forceVitualEst_ = Eigen::Vector3d::Zero();
+    dot_e1_ = Eigen::Vector3d::Zero();
+    ddot_yaw_ = 0.0;
+    dot_yaw_last_ = 0.0;
+    forceTmp_ = Eigen::Vector3d::Zero();
     yawFromHomographyVirtual_ = 0.0;
     RZFromHomographyVirtual_ = Eigen::Matrix3d::Identity();
     mStar_ << 0,0,1;
     axisZ_ << 0,0,1;
-    thrust_ = curUavState_.GetMass() * curUavState_.GetGravity();
+    thrust_ = thrustOffest_;;
 
     homographyCallbackState = false;
     
@@ -115,14 +126,22 @@ HomographyGeometric::UpdateFVitual()
     return res;
 }
 
+/*带入外力估计值*/
+const Eigen::Vector3d 
+HomographyGeometric::UpdateFVitualWithDisturbance()
+{
+    Eigen::Vector3d res;
+    res = - controlGain_.Kv * e2_ - forceVitualEst_;
+    return res;
+}
+
+/*返回真实期望推力大小*/
 const double 
 HomographyGeometric::UpdateThrust()
 {
     double res;
     res = - (FVitual_ - curUavState_.GetMass() * curUavState_.GetGravity() * RZ_*axisZ_).transpose()*(RY_*RX_*axisZ_);
     // Common::ShowVal("res",res);
-    res = (res - curUavState_.GetMass() * curUavState_.GetGravity())*thrustScale_ + thrustOffest_;
-    
     return res;
 }
 
@@ -206,6 +225,44 @@ HomographyGeometric::UpdateVelocityEstimation()
     return velVitualEst_;
 }
 
+const Eigen::Vector3d 
+HomographyGeometric::UpdateForceEstimation()
+{
+    double aStar_ = 1.0;
+    Eigen::Vector3d res;
+
+    Eigen::Matrix3d A;
+    Eigen::Vector3d B,C,D;
+    Eigen::Vector3d dot_forceTmp = Eigen::Vector3d::Zero();
+    dot_e1_ = (e1_ - e1_last_)*controlRate_;
+    ddot_yaw_ = (curUavState_.GetOmega()(2) - dot_yaw_last_)*controlRate_;
+    A = (curUavState_.GetMass()/aStar_)*Eigen::Matrix3d::Identity();
+    B = (curUavState_.GetMass()/aStar_)
+        *(2*Common::MatrixHat(curUavState_.GetOmega()(2) * axisZ_)*dot_e1_
+            + (Common::MatrixHat(curUavState_.GetOmega()(2) * axisZ_)*Common::MatrixHat(curUavState_.GetOmega()(2) * axisZ_) + Common::MatrixHat(ddot_yaw_ * axisZ_))*e1_);
+    C = - curUavState_.GetMass()*curUavState_.GetGravity()*RZ_.transpose()*axisZ_;
+    D = RY_*RX_*axisZ_;
+    
+    dot_forceTmp = - controlGain_.Kp1*forceTmp_
+              + controlGain_.Kp1*(B + C + D*thrust_true_ - A*e1_);
+    forceTmp_ = forceTmp_ + dot_forceTmp/controlRate_;
+    res = forceTmp_ + controlGain_.Kp1*A*e1_;
+
+    dot_yaw_last_ = curUavState_.GetOmega()(2);
+
+    // Common::ShowVal("forceTmp_",forceTmp_);
+    // Common::ShowVal("dot_forceTmp",dot_forceTmp);
+    // Common::ShowVal("A",A);
+    // Common::ShowVal("B",B);
+    // Common::ShowVal("C",C);
+    // Common::ShowVal("D",D);
+    // Common::ShowVal("dot_e1_",dot_e1_);
+    // Common::ShowVal("ddot_yaw_",ddot_yaw_);
+    // Common::ShowVal("dot_yaw_last_",dot_yaw_last_);
+    // Common::ShowVal("res",res);
+    return res;
+}
+
 const Eigen::Vector3d& 
 HomographyGeometric::GetOmegaDesired()const
 {
@@ -247,22 +304,29 @@ HomographyGeometric::operator() (const Control::Quadrotor& curUavState)
     RZFromHomographyVirtual_ << cos(yawFromHomographyVirtual_),-sin(yawFromHomographyVirtual_),0,sin(yawFromHomographyVirtual_),cos(yawFromHomographyVirtual_),0,0,0,1;
     //更新当前的旋转矩阵
     curUavState_.SetR(RZFromHomographyVirtual_*RY_*RX_);
-
+    e1_last_ = e1_;
     e1_ = UpdateError1();//e1 = (I-Hv)*m
 
-    
+    e2_last_ = e2_;
     if(VelocityEstimatorEnable==2){
         e2_ = UpdateError2FromEstVel();
     }else {
         e2_ = UpdateError2FromTrueVel();//e2 = e1 + Vv/c
     }
-    FVitual_ = UpdateFVitual();//Fv = -Kv * e2
-
-    thrust_ = UpdateThrust();//T = - [Fv - m*g*ez]' (RY*RX *ez);
+    if(ForceDisturbanceEstimatorEnable == 2){
+       FVitual_ = UpdateFVitualWithDisturbance();//Fv = -Kv * e2
+    }else {
+        FVitual_ = UpdateFVitual();//Fv = -Kv * e2
+    }
+    thrust_true_ = UpdateThrust();//T = - [Fv - m*g*ez]' (RY*RX *ez);
+    thrust_ = (thrust_true_ - curUavState_.GetMass() * curUavState_.GetGravity())*thrustScale_ + thrustOffest_;//缩放到0-1之间
     RDesired_ = UpdateRotationDesired();//FVitual_ -> RDesired_
     omegaDesired_ = UpdateOmegaDesired();
-    if(VelocityEstimatorEnable!=0){
+    if(VelocityEstimatorEnable != 0){
         velVitualEst_ = UpdateVelocityEstimation();//估计虚拟框架当前速度
+    }
+    if(ForceDisturbanceEstimatorEnable != 0){
+        forceVitualEst_ = UpdateForceEstimation();
     }
     // Common::ShowVal("RZ_",RZ_);
     // Common::ShowVal("RY_",RY_);
@@ -270,8 +334,8 @@ HomographyGeometric::operator() (const Control::Quadrotor& curUavState)
     // Common::ShowVal("angle(0)",angle(0));
 
     // Common::ShowVal("yawFromHomographyVirtual_",yawFromHomographyVirtual_);
-    curUavState_.ShowState("homo",5);
-    ShowInternal(5);
+    //curUavState_.ShowState("homo",5);
+    //ShowInternal(5);
     // ShowParamVal(5);
 }
 
@@ -341,6 +405,12 @@ HomographyGeometric::GetVelVitualTure() const
     return RY_*RX_*curUavState_.GetVel();
 }
 
+const Eigen::Vector3d&
+HomographyGeometric::GetForceVitualEst() const
+{
+    return forceVitualEst_;
+}
+
 void 
 HomographyGeometric::ShowInternal(int num) const
 {
@@ -357,6 +427,7 @@ HomographyGeometric::ShowInternal(int num) const
     Common::ShowVal("velVitualEst_",velVitualEst_);
     Common::ShowVal("RY_*RX_*curUavState_.GetVel()",RY_*RX_*curUavState_.GetVel());
     Common::ShowVal("velVitualError_",velVitualError_);
+    Common::ShowVal("forceVitualEst_",forceVitualEst_);
 
 }
 

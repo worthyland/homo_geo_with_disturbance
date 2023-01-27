@@ -114,3 +114,28 @@ rosrun image_view video_recorder image:=/galaxy_camera/image_raw
 rosbag record /galaxy_camera/image_raw
 
 rosbag play ()   /galaxy_camera/image_raw:=/camera/image_raw
+
+# gazebo中发布作用于物体机体的力和力矩
+## 参考框架world  用来模拟风力
+rosservice call /gazebo/apply_body_wrench "body_name: 'iris::base_link'
+reference_frame: 'world'
+reference_point: {x: 0.0, y: 0.0, z: 0.0}
+wrench:
+  force: {x: 3.0, y: 0.0, z: 0.0}
+  torque: {x: 0.0, y: 0.0, z: 0.0}
+start_time: {secs: 0, nsecs: 0}
+duration: {secs: 0, nsecs: -1}"
+
+
+如此设计 duration: {secs: 0, nsecs: -1}"力一直持续
+## 参考框架 无人机机体 
+rosservice call /gazebo/apply_body_wrench "body_name: 'iris::base_link'
+reference_frame: 'iris::base_link'
+reference_point: {x: 0.0, y: 0.0, z: 0.0}
+wrench:
+  force: {x: 0.0, y: 0.0, z: 0.0}
+  torque: {x: 0.0, y: 0.0, z: 10.0}
+start_time: {secs: 0, nsecs: 0}
+duration: {secs: 5, nsecs: 0}"
+
+

@@ -20,6 +20,7 @@ struct ControlGain
     Eigen::Matrix3d KOmega;
     double c2,c3;
     double Ks;
+    Eigen::Matrix3d Kp2;
 };
 
 private:
@@ -37,11 +38,18 @@ private:
 
     double attitudeTrackError_;
 
+
+    //外力矩扰动观测器相关变量
+    Eigen::Vector3d momentEst_;//作用于机体框架的外力矩估计值
+    Eigen::Vector3d momentTmp_;//中间变量
+    int MomentDisturbanceEstimatorEnable;//扰动估计器 0 不使能  1 使能但不使用 2 使能且使用
+
 private:
     const Eigen::Vector3d UpdateER();
     const Eigen::Vector3d UpdateEOmega();
     const Eigen::Vector3d UpdateTorque();
     const double UpdateAttitudeTrackError();
+    const Eigen::Vector3d UpdateMomentEstimation();
 public:
     SO3Control(const ros::NodeHandle& nh,const ros::NodeHandle& nhParam);
     ~SO3Control();

@@ -23,6 +23,8 @@ struct ControlGain
     Eigen::Matrix3d Kv;
 
     double k1,k2,k3;
+
+    Eigen::Matrix3d Kp1;//外力估计器的控制参数
 };
 private:
     /* data */
@@ -52,11 +54,13 @@ private:
     double yawFromHomographyVirtual_;//从虚拟单应性中求解的偏航角
     Eigen::Matrix3d RZFromHomographyVirtual_;//从yawFromHomographyVirtual_构建的偏航旋转矩阵
     Eigen::Vector3d e1_,e2_;
+    Eigen::Vector3d e1_last_,e2_last_;
     Eigen::Vector3d FVitual_;
     Eigen::Matrix3d RDesired_;
     Eigen::Matrix3d dot_RDesired_;
     Eigen::Vector3d omegaDesired_;
-    double thrust_;//论文里为正数，为电机推力之和
+    double thrust_;//论文里为正数，为电机推力之和，发送到px4，缩放到0-1之间
+    double thrust_true_;//计算出来期望真实推力大小
 
     //以下变量为常量
     Eigen::Vector3d mStar_;
@@ -74,6 +78,16 @@ private:
     Eigen::Vector3d  e1Est_;
     Eigen::Vector3d  velVitualError_;
     Eigen::Vector3d  velVitualEst_;//估计的虚拟框架速度
+
+    //外力扰动观测器相关变量
+    Eigen::Vector3d forceVitualEst_;//作用于虚拟框架的外力估计值
+    Eigen::Vector3d dot_e1_;
+    double dot_yaw_last_;
+    double ddot_yaw_;
+    Eigen::Vector3d forceTmp_;//中间变量
+
+
+
     bool homographyCallbackState;
     int VelocityEstimatorEnable;//速度估计器 0 不使能  1 使能但不使用 2 使能且使用 
     int ForceDisturbanceEstimatorEnable;//扰动估计器 0 不使能  1 使能但不使用 2 使能且使用
@@ -86,10 +100,12 @@ private:
     const Eigen::Vector3d UpdateError2FromTrueVel();
     const Eigen::Vector3d UpdateError2FromEstVel();
     const Eigen::Vector3d UpdateFVitual();
+    const Eigen::Vector3d UpdateFVitualWithDisturbance();
     const double UpdateThrust();
     const Eigen::Matrix3d UpdateRotationDesired();
     const Eigen::Vector3d UpdateOmegaDesired();
     const Eigen::Vector3d UpdateVelocityEstimation();
+    const Eigen::Vector3d UpdateForceEstimation();
 
 public:
     HomographyGeometric(const ros::NodeHandle& nh,const ros::NodeHandle& nhParam);
@@ -112,6 +128,7 @@ public:
     const Eigen::Vector3d& GetVelVitualError() const;
     const Eigen::Vector3d& GetVelVitualEst() const;
     const Eigen::Vector3d GetVelVitualTure() const;
+    const Eigen::Vector3d& GetForceVitualEst() const;
 
     void ShowInternal(int num = 5) const;
     void ShowParamVal(int num = 5) const;

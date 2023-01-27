@@ -40,9 +40,12 @@ int main(int argc, char *argv[]){
             Eigen::Matrix3d enu_R_ned;
             enu_R_ned << 1.0, 0.0, 0.0,0.0, -1.0, 0.0, 0.0, 0.0, -1.0;
             //力矩计算表示在base_link_ned，推力计算为正，不需要转换
-            uavInfo.ActuatorPub(outLoop.GetThrust(), attitudeControllor.GetTorque(),true);
+            uavInfo.ActuatorPub(outLoop.GetThrust(), attitudeControllor.GetTorque(),false);
             // uavInfo.ActuatorPub();
+        }else{
+            uavInfo.ActuatorPub(outLoop.GetThrust(), attitudeControllor.GetTorque(),false);
         }
+        //发布数据记录话题
         std_msgs::Float32MultiArray outputRecord;
 
         uavInfo.DataSvae(outputRecord,outLoop.GetE1());//0 1 2
@@ -60,6 +63,8 @@ int main(int argc, char *argv[]){
         uavInfo.DataSvae(outputRecord,attitudeControllor.GetEOmega());// 30 31 32
         uavInfo.DataSvae(outputRecord,outLoop.GetThrust());// 33
         uavInfo.DataSvae(outputRecord,attitudeControllor.GetAttitudeTrackError());// 34
+        
+        uavInfo.DataSvae(outputRecord,outLoop.GetForceVitualEst());// 35 36 37
         recordPub.publish(outputRecord);
 
         ros::spinOnce();

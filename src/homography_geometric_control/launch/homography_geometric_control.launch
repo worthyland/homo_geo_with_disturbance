@@ -2,6 +2,7 @@
 
  <node pkg="homography_geometric_control" name="homo_geo" type="homo_geo" output="screen">
    <!-- SO3 control parameters -->
+    <param name="MomentDisturbanceEstimatorEnable" value="0"/> <!-- 速度估计器 0 不使能  1 使能但不使用 2 使能且使用-->
     <param name="Control_rate" value="200.0"/>
     <param name="ControlGain/KRx" value="3.0"/>
     <param name="ControlGain/KRy" value="3.0"/>
@@ -12,6 +13,9 @@
     <param name="ControlGain/c2" value="0.18"/>
     <param name="ControlGain/c3" value="8.0"/>
     <param name="ControlGain/Ks" value="0.00"/>
+    <param name="ControlGain/Kp2x" value="1.0"/>
+    <param name="ControlGain/Kp2y" value="1.0"/>
+    <param name="ControlGain/Kp2z" value="1.0"/>  
 
    <!-- MavrosInteraction parameters -->
     <param name="Mass" value="1.5"/>
@@ -23,7 +27,7 @@
     
     <!-- HomographyGeometric parameters -->
     <param name="VelocityEstimatorEnable" value="0"/> <!-- 速度估计器 0 不使能  1 使能但不使用 2 使能且使用-->
-    <param name="ForceDisturbanceEstimatorEnable" value="0"/> <!-- 扰动估计器 0 不使能  1 使能但不使用 2 使能且使用-->
+    <param name="ForceDisturbanceEstimatorEnable" value="2"/> <!-- 扰动估计器 0 不使能  1 使能但不使用 2 使能且使用-->
     <param name="ControlGain/c" value="1.50"/>
     <param name="YawDesired" value="0.0"/>
     <param name="ControlGain/Kvx" value="8.25"/>
@@ -34,6 +38,9 @@
     <param name="ControlGain/k1" value="2.26"/>
     <param name="ControlGain/k2" value="1.0"/>
     <param name="ControlGain/k3" value="0.0"/>
+    <param name="ControlGain/Kp1x" value="1.0"/>
+    <param name="ControlGain/Kp1y" value="1.0"/>
+    <param name="ControlGain/Kp1z" value="1.0"/>    
     <param name="PitchOffest" value="-0.0"/>
     <param name="RollOffest" value="-0.0"/>
     <param name="YawOffest" value="0.0"/>

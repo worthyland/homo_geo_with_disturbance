@@ -17,7 +17,19 @@ SO3Control::SO3Control(const ros::NodeHandle& nh,const ros::NodeHandle& nhParam)
     nhParam_.param("ControlGain/c2",controlGain_.c2,0.15);
     nhParam_.param("ControlGain/c3",controlGain_.c3,1.0);
     nhParam_.param("ControlGain/Ks",controlGain_.Ks,1.0);
+    controlGain_.Kp2 =  Eigen::Matrix3d::Identity();
+    nhParam_.param("ControlGain/Kp2x",controlGain_.Kp2(0,0),1.0);
+    nhParam_.param("ControlGain/Kp2y",controlGain_.Kp2(1,1),1.0);
+    nhParam_.param("ControlGain/Kp2z",controlGain_.Kp2(2,2),1.0);
+    omegaDesired_ = Eigen::Vector3d::Zero();
+    RDesired_ = Eigen::Matrix3d::Identity();
+    torque_ = Eigen::Vector3d::Zero();
+    eR_ = Eigen::Vector3d::Zero();
+    eOmega_ = Eigen::Vector3d::Zero();
     attitudeTrackError_ = 0.0;
+    momentEst_ = Eigen::Vector3d::Zero();
+    momentTmp_ = Eigen::Vector3d::Zero();
+    nhParam_.param("MomentDisturbanceEstimatorEnable",MomentDisturbanceEstimatorEnable,0); 
 }
 
 SO3Control::~SO3Control()
@@ -124,11 +136,30 @@ SO3Control::UpdateTorque()
     dot_Ks = - controlGain_.c3* controlGain_.Ks + 0.1*s.transpose()*Common::Sign(s);
     return res;
 }
+
 const double 
 SO3Control::UpdateAttitudeTrackError()
 {
     double res;
     res = 0.5*(Eigen::Matrix3d::Identity() - RDesired_.transpose() * curUavState_.GetR()).trace();
+    return res;
+}
+
+const Eigen::Vector3d 
+SO3Control::UpdateMomentEstimation()
+{
+    Eigen::Vector3d res;
+    Eigen::Matrix3d A,D;
+    Eigen::Vector3d B,C;
+    Eigen::Vector3d dot_momentTmp = Eigen::Vector3d::Zero();
+    A = curUavState_.GetInertialMatrix();
+    B = Common::MatrixHat(curUavState_.GetOmega()) * curUavState_.GetInertialMatrix() * curUavState_.GetOmega();
+    C = Eigen::Vector3d::Zero();
+    D = - Eigen::Matrix3d::Identity();
+    dot_momentTmp = - controlGain_.Kp2*momentTmp_
+                    + controlGain_.Kp2*(B + C + D*torque_ - A*curUavState_.GetOmega());
+    momentTmp_ = momentTmp_ + dot_momentTmp/controlRate_;
+    res = momentTmp_ + controlGain_.Kp2*A*curUavState_.GetOmega();
     return res;
 }
 void 
@@ -141,11 +172,19 @@ SO3Control::operator() (const Eigen::Matrix3d& RDesired,const Eigen::Vector3d& o
     eR_ = UpdateER();
     eOmega_ = UpdateEOmega();
 
-    torque_ = UpdateTorque();
+    if(MomentDisturbanceEstimatorEnable == 2){
+        torque_ = UpdateTorque() - momentEst_;
+    }else {
+        torque_ = UpdateTorque();
+    }
+    
     attitudeTrackError_ = UpdateAttitudeTrackError();
     
+    if(MomentDisturbanceEstimatorEnable != 0){
+        momentEst_ = UpdateMomentEstimation();
+    }
     ShowInternal(5);
-    ShowParamVal(5);
+    //ShowParamVal(5);
 }
 
 
@@ -156,7 +195,7 @@ SO3Control::ShowInternal(int num) const
     Common::ShowVal("eR_",eR_,num);
     Common::ShowVal("eOmega_",eOmega_,num);
     Common::ShowVal("torque_",torque_,num);
-
+    Common::ShowVal("momentEst_",momentEst_,num);
 }
 
 void 
