@@ -417,7 +417,7 @@ HomographyGeometric::ShowInternal(int num) const
     std::cout << "-------------------HomographyFGeometric-------------------" <<std::endl;
     Common::ShowVal("homography_",homography_,num);
     Common::ShowVal("homographyVirtual_",homographyVirtual_,num);
-    Common::ShowVal("e1_",e1_,num);
+    Common::ShowVal("e1_",e1_,num);  
     Common::ShowVal("e2_",e2_,num);
     Common::ShowVal("FVitual_",FVitual_,num);
     Common::ShowVal("thrust_",thrust_,num);
