@@ -207,6 +207,7 @@ HomographyGeometric::UpdateVelocityEstimation()
     // static Eigen::Vector3d  e1ErrorTmp = Eigen::Vector3d::Zero();
     
     // static Eigen::Vector3d  e1EstTmp = Eigen::Vector3d::Zero();
+    
     // static Eigen::Vector3d  velVitualErrorTmp = Eigen::Vector3d::Zero();
     // static Eigen::Vector3d  velVitualEstTmp = Eigen::Vector3d::Zero();
     double aStar_ = 1.0;
