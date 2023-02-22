@@ -2,7 +2,7 @@
 
  <node pkg="homography_geometric_control" name="homo_geo" type="homo_geo" output="screen">
    <!-- SO3 control parameters -->
-    <param name="MomentDisturbanceEstimatorEnable" value="0"/> <!-- 速度估计器 0 不使能  1 使能但不使用 2 使能且使用-->
+    <param name="MomentDisturbanceEstimatorEnable" value="1"/> <!-- 扰动力矩估计器 0 不使能  1 使能但不使用 2 使能且使用-->
     <param name="Control_rate" value="200.0"/>
     <param name="ControlGain/KRx" value="3.0"/>
     <param name="ControlGain/KRy" value="3.0"/>
@@ -10,37 +10,37 @@
     <param name="ControlGain/KOmegax" value="0.152"/>
     <param name="ControlGain/KOmegay" value="0.152"/>
     <param name="ControlGain/KOmegaz" value="0.082"/>    
-    <param name="ControlGain/c2" value="0.14"/>
+    <param name="ControlGain/c2" value="0.12"/>
     <param name="ControlGain/c3" value="8.0"/>
     <param name="ControlGain/Ks" value="0.00"/>
-    <param name="ControlGain/Kp2x" value="1.0"/>
-    <param name="ControlGain/Kp2y" value="1.0"/>
-    <param name="ControlGain/Kp2z" value="1.0"/>  
+    <param name="ControlGain/Kp2x" value="0.1"/>
+    <param name="ControlGain/Kp2y" value="0.1"/>
+    <param name="ControlGain/Kp2z" value="0.1"/>  
 
    <!-- MavrosInteraction parameters -->
     <param name="Mass" value="1.5"/>
     <param name="Gravity" value="9.80665"/>
-    <param name="MinTorque" value="-0.5"/>
-    <param name="MaxTorque" value="0.5"/>
-    <param name="MinThrust" value="0.3"/>
-    <param name="MaxThrust" value="0.95"/>
+    <param name="MinTorque" value="-0.3"/>
+    <param name="MaxTorque" value="0.3"/>
+    <param name="MinThrust" value="0.25"/>
+    <param name="MaxThrust" value="0.65"/>
     
     <!-- HomographyGeometric parameters -->
-    <param name="VelocityEstimatorEnable" value="0"/> <!-- 速度估计器 0 不使能  1 使能但不使用 2 使能且使用-->
-    <param name="ForceDisturbanceEstimatorEnable" value="0"/> <!-- 扰动估计器 0 不使能  1 使能但不使用 2 使能且使用-->
-    <param name="ControlGain/c" value="1.50"/>
+    <param name="VelocityEstimatorEnable" value="1"/> <!-- 速度估计器 0 不使能  1 使能但不使用 2 使能且使用-->
+    <param name="ForceDisturbanceEstimatorEnable" value="1"/> <!-- 扰动力估计器 0 不使能  1 使能但不使用 2 使能且使用-->
+    <param name="ControlGain/c" value="1.5"/>
     <param name="YawDesired" value="0.0"/>
-    <param name="ControlGain/Kvx" value="8.25"/>
-    <param name="ControlGain/Kvy" value="8.25"/>
-    <param name="ControlGain/Kvz" value="5.35"/>
+    <param name="ControlGain/Kvx" value="12.25"/>
+    <param name="ControlGain/Kvy" value="12.25"/>
+    <param name="ControlGain/Kvz" value="7.35"/>
     <param name="ThrustOffest" value="0.564"/> <!-- 归一化推力的偏移量  无人机稳定时的系数 -->
-    <param name="ThrustScale" value="0.045"/><!-- 归一化推力的的缩放因子-->
+    <param name="ThrustScale" value="0.025"/><!-- 归一化推力的的缩放因子-->
     <param name="ControlGain/k1" value="2.26"/>
     <param name="ControlGain/k2" value="1.0"/>
     <param name="ControlGain/k3" value="0.0"/>
-    <param name="ControlGain/Kp1x" value="1.0"/>
-    <param name="ControlGain/Kp1y" value="1.0"/>
-    <param name="ControlGain/Kp1z" value="1.0"/>    
+    <param name="ControlGain/Kp1x" value="0.7"/>
+    <param name="ControlGain/Kp1y" value="0.7"/>
+    <param name="ControlGain/Kp1z" value="0.7"/>    
     <param name="PitchOffest" value="-0.0"/>
     <param name="RollOffest" value="-0.0"/>
     <param name="YawOffest" value="0.0"/>
