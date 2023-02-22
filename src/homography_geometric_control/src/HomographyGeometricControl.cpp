@@ -186,7 +186,7 @@ HomographyGeometric::UpdateRotationDesired()
 
     // Common::ShowVal("debugVal1",debugVal1);
     // Common::ShowVal("debugVal2",debugVal2);
-    
+
 
     return res;
 }
@@ -205,6 +205,7 @@ HomographyGeometric::UpdateVelocityEstimation()
 {
     
     // static Eigen::Vector3d  e1ErrorTmp = Eigen::Vector3d::Zero();
+    
     // static Eigen::Vector3d  e1EstTmp = Eigen::Vector3d::Zero();
     // static Eigen::Vector3d  velVitualErrorTmp = Eigen::Vector3d::Zero();
     // static Eigen::Vector3d  velVitualEstTmp = Eigen::Vector3d::Zero();
