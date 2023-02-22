@@ -1,0 +1,8 @@
+prefix=/home/sw/homo_geo_with_disturbance/install
+
+Name: homo_msgs
+Description: Description of homo_msgs
+Version: 0.1.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: geometry_msgs std_msgs message_runtime

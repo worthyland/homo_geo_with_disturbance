@@ -1,0 +1,8 @@
+prefix=/home/sw/homo_geo_with_disturbance/devel
+
+Name: mavros_interaction
+Description: Description of mavros_interaction
+Version: 0.0.0
+Cflags: -I/home/sw/homo_geo_with_disturbance/src/control/mavros_interaction/include
+Libs: -L${prefix}/lib -lmavros_interaction
+Requires: 
